@@ -18,6 +18,10 @@ echo "export JAVA_HOME" >> /etc/profile
 echo "export CLASSPATH" >> /etc/profile
 echo "export PATH" >> /etc/profile
 source /etc/profile
+#创建存储目录（3台主机同时操作）
+mkdir -p /usr/local/rocketmq/store/commitlog
+mkdir /usr/local/rocketmq/store/consumequeue
+mkdir /usr/local/rocketmq/store/index
 
 #登录rocketmq-001主机
 #编辑brokermq的broker-a.properties配置文件
