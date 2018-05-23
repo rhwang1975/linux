@@ -1,7 +1,9 @@
+#配置hosts
 echo "192.168.150.145 rocketmq-001" >> /etc/hosts
 echo "192.168.150.146 rocketmq-002" >> /etc/hosts
 echo "192.168.150.147 rocketmq-003" >> /etc/hosts
 
+#安装jdk1.8.0_161和rocketmq4.2.0
 cd /soft
 yum install -y unzip
 tar zxvf jdk-8u161-linux-x64.tar.gz -C /usr/local/
@@ -89,3 +91,9 @@ echo "messageIndexSafe=false" >> ./broker-b.properties
 echo "accessMessageInMemoryMaxRatio=40" >> ./broker-b.properties
 echo "messageDelyLevel=1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h" >> ./broker-b.properties
 ==============================================================================
+
+
+
+
+
+
