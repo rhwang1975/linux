@@ -247,9 +247,25 @@ sed -i '39s/JAVA_OPT="${JAVA_OPT} -server -Xms8g -Xmx8g -Xmn4g"/JAVA_OPT="${JAVA
 sed -i '45s/JAVA_OPT="${JAVA_OPT} -XX:MaxDirectMemorySize=15g"/JAVA_OPT="${JAVA_OPT} -XX:MaxDirectMemorySize=512m"/' ./runbroker.sh
 sed -i '39s/JAVA_OPT="${JAVA_OPT} -server -Xms4g -Xmx4g -Xmn2g -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=320m"/JAVA_OPT="${JAVA_OPT} -server -Xms256m -Xmx256m -Xmn256m -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m“/' ./runserver.sh
 
-启动mqbroker
+#启动nameserver和mqbroker（3台主机操作）
+#1.启动nameserver
+nohup sh mqnamesrv &
+
+#2.启动mqbroker
 nohup sh mqbroker -c /usr/local/rocketmq/conf/2m-noslave/broker-a.properties > /usr/local/rocketmq/conf/2m-noslave/broker-a.properties.out &
 nohup sh mqbroker -c /usr/local/rocketmq/conf/2m-noslave/broker-b.properties > /usr/local/rocketmq/conf/2m-noslave/broker-b.properties.out &
+
+#停止broker和nameserver
+#1.停止broker
+sh  mqshutdown broker
+#2.停止nameserver
+sh  mqshutdown namesrv
+
+
+
+
+
+
 
 #Error
 #执行上述命令出错Java HotSpot(TM) 64-Bit Server VM warning: INFO: os::commit_memory(0x00000005c0000000, 8589934592, 0) failed; error='Cannot allocate memory' (errno=12)
