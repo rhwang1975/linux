@@ -244,8 +244,8 @@ echo "messageDelyLevel=1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2
 #修改/usr/local/rocketmq/bin目录下的runbroker.sh 和 runserver.sh文件中的参数
 cd /usr/local/rocketmq/bin
 sed -i '39s/JAVA_OPT="${JAVA_OPT} -server -Xms8g -Xmx8g -Xmn4g"/JAVA_OPT="${JAVA_OPT} -server -Xms256m -Xmx256m -Xmn256m"/' ./runbroker.sh
-sed -i '45s/JAVA_OPT="${JAVA_OPT} -XX:MaxDirectMemorySize=15g"/JAVA_OPT="${JAVA_OPT} -XX:MaxDirectMemorySize=256m"/' ./runbroker.sh
-sed -i '39s/JAVA_OPT="${JAVA_OPT} -server -Xms4g -Xmx4g -Xmn2g -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=320m"/JAVA_OPT="${JAVA_OPT} -server -Xms128m -Xmx128m -Xmn128m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=256m“/' ./runserver.sh
+sed -i '45s/JAVA_OPT="${JAVA_OPT} -XX:MaxDirectMemorySize=15g"/JAVA_OPT="${JAVA_OPT} -XX:MaxDirectMemorySize=512m"/' ./runbroker.sh
+sed -i '39s/JAVA_OPT="${JAVA_OPT} -server -Xms4g -Xmx4g -Xmn2g -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=320m"/JAVA_OPT="${JAVA_OPT} -server -Xms256m -Xmx256m -Xmn256m -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m“/' ./runserver.sh
 
 启动mqbroker
 nohup sh mqbroker -c /usr/local/rocketmq/conf/2m-noslave/broker-a.properties > /usr/local/rocketmq/conf/2m-noslave/broker-a.properties.out &
@@ -259,10 +259,10 @@ nohup sh mqbroker -c /usr/local/rocketmq/conf/2m-noslave/broker-b.properties > /
 cd /usr/local/rocketmq/bin
 vi runbroker.sh
 JAVA_OPT="${JAVA_OPT} -server -Xms256m -Xmx256m -Xmn256m"
-JAVA_OPT="${JAVA_OPT} -XX:MaxDirectMemorySize=256m"
+JAVA_OPT="${JAVA_OPT} -XX:MaxDirectMemorySize=512m"
  
 vi runserver.sh
-JAVA_OPT="${JAVA_OPT} -server -Xms128m -Xmx128m -Xmn128m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=256m"
+JAVA_OPT="${JAVA_OPT} -server -Xms256m -Xmx256m -Xmn256m -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m"
 #说明：-Xms256m -Xmx256m -Xmn256m分别代表了最小堆内存、最大堆内存、新生代大小
 
 
