@@ -1,16 +1,16 @@
-#配置hosts（3台主机同时操作）
+#配置hosts（3台主机执行操作）
 echo "192.168.150.145 rocketmq-001" >> /etc/hosts
 echo "192.168.150.146 rocketmq-002" >> /etc/hosts
 echo "192.168.150.147 rocketmq-003" >> /etc/hosts
 
-#安装jdk1.8.0_161和rocketmq4.2.0（3台主机同时操作）
+#安装jdk1.8.0_161和rocketmq4.2.0（3台主机执行操作）
 cd /soft
 yum install -y unzip
 tar zxvf jdk-8u161-linux-x64.tar.gz -C /usr/local/
 mv /usr/local/jdk1.8.0_161 /usr/local/java
 unzip -d /usr/local/rocketmq rocketmq-all-4.2.0-bin-release.zip
 
-#配置环境变量（3台主机同时操作）
+#配置环境变量（3台主机执行操作）
 echo "JAVA_HOME=/usr/local/java" >> /etc/profile
 echo 'CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar' >> /etc/profile
 echo 'PATH=$JAVA_HOME/bin:$PATH:' >> /etc/profile
@@ -26,7 +26,7 @@ echo "export ROCKETMQ_HOME PATH" >> /etc/profile
 
 source /etc/profile
 
-#创建存储目录（3台主机同时操作）
+#创建存储目录（3台主机执行操作）
 mkdir -p /usr/local/rocketmq/store/commitlog
 mkdir /usr/local/rocketmq/store/consumequeue
 mkdir /usr/local/rocketmq/store/index
@@ -247,7 +247,7 @@ sed -i '39s/JAVA_OPT="${JAVA_OPT} -server -Xms8g -Xmx8g -Xmn4g"/JAVA_OPT="${JAVA
 sed -i '45s/JAVA_OPT="${JAVA_OPT} -XX:MaxDirectMemorySize=15g"/JAVA_OPT="${JAVA_OPT} -XX:MaxDirectMemorySize=512m"/' ./runbroker.sh
 sed -i '39s/JAVA_OPT="${JAVA_OPT} -server -Xms4g -Xmx4g -Xmn2g -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=320m"/JAVA_OPT="${JAVA_OPT} -server -Xms256m -Xmx256m -Xmn256m -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m“/' ./runserver.sh
 
-#启动nameserver和mqbroker（3台主机操作）
+#启动nameserver和mqbroker（3台主机执行）
 #1.启动nameserver
 nohup sh mqnamesrv &
 
