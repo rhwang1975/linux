@@ -35,3 +35,29 @@ mvn -v
 #使用maven编译rocketmq-externals-master
 cd /usr/local/rocketmq-externals-master/rocketmq-console/
 mvn clean package -Dmaven.test.skip=true
+
+#启动rocketmq web界面
+#编译成功后，在rocketmq-console目录下会生成一个target目录，该目录下有启动rocketmq web界面的jar文件
+cd /usr/local/rocketmq-externals-master/rocketmq-console/target
+nohup java -jar rocketmq-console-ng-1.0.0.jar >>/usr/local/rocketmq/log.out 2>&1 &
+
+#确认启动成功
+ps -ef |grep rocketmq-console-ng-1.0.0
+tail -f /usr/local/rocketmq/log.out
+#出现以下2行表示启动成功
+#[2018-05-24 18:38:59.301]  INFO Tomcat started on port(s): 8080 (http)
+#[2018-05-24 18:38:59.326]  INFO Started App in 11.294 seconds (JVM running for 13.45)
+
+#客户端启动web浏览器输入http://192.168.150.145:8080打开rocketmq-console界面
+
+
+
+
+
+
+
+
+
+
+
+
