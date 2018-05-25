@@ -1,3 +1,10 @@
+#架构说明：
+#OS：CentOS7.5
+#主机1：192.168.150.145
+#主机2：192.168.150.146
+#主机3：192.168.150.147
+#soft：jdk1.8.0_161，rocketmq4.2.0，maven3.5.3
+
 #配置hosts（3台主机执行操作）
 echo "192.168.150.145 rocketmq-001" >> /etc/hosts
 echo "192.168.150.146 rocketmq-002" >> /etc/hosts
@@ -30,6 +37,7 @@ source /etc/profile
 mkdir -p /usr/local/rocketmq/store/commitlog
 mkdir /usr/local/rocketmq/store/consumequeue
 mkdir /usr/local/rocketmq/store/index
+mkdir /usr/local/rocketmq/logs
 
 #登录rocketmq-001主机
 #编辑brokermq的broker-a.properties配置文件
@@ -246,14 +254,15 @@ cd /usr/local/rocketmq/bin
 sed -i '39s/JAVA_OPT="${JAVA_OPT} -server -Xms8g -Xmx8g -Xmn4g"/JAVA_OPT="${JAVA_OPT} -server -Xms256m -Xmx256m -Xmn256m"/' ./runbroker.sh
 sed -i '45s/JAVA_OPT="${JAVA_OPT} -XX:MaxDirectMemorySize=15g"/JAVA_OPT="${JAVA_OPT} -XX:MaxDirectMemorySize=512m"/' ./runbroker.sh
 sed -i '39s/JAVA_OPT="${JAVA_OPT} -server -Xms4g -Xmx4g -Xmn2g -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=320m"/JAVA_OPT="${JAVA_OPT} -server -Xms256m -Xmx256m -Xmn256m -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m“/' ./runserver.sh
+#说明：以上操作如是在多台独立服务器来做集群可以忽略不做，如是在多台虚拟机集群或搭架伪集群就需要修改。
 
 #启动nameserver和mqbroker（3台主机执行）
 #1.启动nameserver
 nohup sh mqnamesrv &
 
 #2.启动mqbroker
-nohup sh mqbroker -c /usr/local/rocketmq/conf/2m-noslave/broker-a.properties > /usr/local/rocketmq/conf/2m-noslave/broker-a.properties.out &
-nohup sh mqbroker -c /usr/local/rocketmq/conf/2m-noslave/broker-b.properties > /usr/local/rocketmq/conf/2m-noslave/broker-b.properties.out &
+nohup sh mqbroker -c /usr/local/rocketmq/conf/2m-noslave/broker-a.properties > /usr/local/rocketmq/logs/broker-a.properties.out &
+nohup sh mqbroker -c /usr/local/rocketmq/conf/2m-noslave/broker-b.properties > /usr/local/rocketmq/logs/broker-b.properties.out &
 
 #停止broker和nameserver
 #1.停止broker
