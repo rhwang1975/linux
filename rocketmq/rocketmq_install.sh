@@ -262,6 +262,9 @@ nohup sh mqnamesrv &
 nohup sh mqbroker -c /usr/local/rocketmq/conf/2m-noslave/broker-a.properties > /usr/local/rocketmq/logs/broker-a.properties.out &
 nohup sh mqbroker -c /usr/local/rocketmq/conf/2m-noslave/broker-b.properties > /usr/local/rocketmq/logs/broker-b.properties.out &
 
+netstat -natlp
+jps
+
 #停止broker和nameserver
 #1.停止broker
 sh  mqshutdown broker
