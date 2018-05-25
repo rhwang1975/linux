@@ -19,18 +19,16 @@ unzip -d /usr/local/rocketmq rocketmq-all-4.2.0-bin-release.zip
 
 #配置环境变量（3台主机执行操作）
 echo "JAVA_HOME=/usr/local/java" >> /etc/profile
-echo 'CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar' >> /etc/profile
-echo 'PATH=$JAVA_HOME/bin:$PATH:' >> /etc/profile
-echo "export JAVA_HOME" >> /etc/profile
-echo "export CLASSPATH" >> /etc/profile
-echo "export PATH" >> /etc/profile
-
+echo "M3_HOME=/usr/local/maven" >> /etc/profile
 echo "NAMESRV_ADDR=192.168.150.145:9876,192.168.150.146:9876,192.168.150.147:9876" >> /etc/profile
-echo "export NAMESRV_ADDR" >> /etc/profile
 echo "ROCKETMQ_HOME=/usr/local/rocketmq" >> /etc/profile
-echo "PATH=$ROCKETMQ_HOME/bin:$PATH" >> /etc/profile
-echo "export ROCKETMQ_HOME PATH" >> /etc/profile
-
+echo "CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar" >> /etc/profile
+echo "export JAVA_HOME" >> /etc/profile
+echo "export M3_HOME" >> /etc/profile
+echo "export CLASSPATH" >> /etc/profile
+echo "export NAMESRV_ADDR" >> /etc/profile
+echo "export ROCKETMQ_HOME" >> /etc/profile
+echo "export PATH=\$ROCKETMQ_HOME/bin:\$JAVA_HOME/bin:\$JAVA_HOME/jre/bin:\$M3_HOME/bin:\$CLASSPATH:\$PATH" >> /etc/profile
 source /etc/profile
 
 #创建存储目录（3台主机执行操作）
