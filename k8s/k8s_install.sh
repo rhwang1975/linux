@@ -456,8 +456,38 @@ etcdctl --endpoints=https://192.168.150.181:2379,https://192.168.150.182:2379,ht
 #1. 安装docker（kubeadm目前支持docker最高版本是17.03.x）
 yum install https://mirrors.aliyun.com/docker-ce/linux/centos/7/x86_64/stable/Packages/docker-ce-selinux-17.03.2.ce-1.el7.centos.noarch.rpm  -y
 yum install https://mirrors.aliyun.com/docker-ce/linux/centos/7/x86_64/stable/Packages/docker-ce-17.03.2.ce-1.el7.centos.x86_64.rpm  -y
+
 #2. 修改配置文件 vim /usr/lib/systemd/system/docker.service
-ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock  --registry-mirror=https://ms3cfraz.mirror.aliyuncs.com
+sed -ri '/^ExecStart=/c\ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock  --registry-mirror=https://ms3cfraz.mirror.aliyuncs.com' /usr/lib/systemd/system/docker.service
+
+#3. 启动docker
+systemctl daemon-reload
+systemctl restart docker
+systemctl enable docker
+systemctl status docker
+
+#六、安装、配置kubeadm
+#1. 所有节点安装kubelet kubeadm kubectl
+yum install -y kubelet kubeadm kubectl
+systemctl enable kubelet 
+
+#2. 所有节点修改kubelet配置文件
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
