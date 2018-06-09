@@ -328,19 +328,131 @@ scp -r /etc/etcd/ssl/*.pem node03:/etc/etcd/ssl/
 
 #四、安装配置etcd (三主节点）
 #1.安装etcd
-yum install etcd -y
+yum -y install etcd
 mkdir -p /var/lib/etcd
 
-#2.配置node01的etcd.service
+#1) 配置node01的etcd.service
+cat <<EOF >/etc/systemd/system/etcd.service
+[Unit]
+Description=Etcd Server
+After=network.target
+After=network-online.target
+Wants=network-online.target
+Documentation=https://github.com/coreos
 
+[Service]
+Type=notify
+WorkingDirectory=/var/lib/etcd/
+ExecStart=/usr/bin/etcd \
+  --name node01 \
+  --cert-file=/etc/etcd/ssl/etcd.pem \
+  --key-file=/etc/etcd/ssl/etcd-key.pem \
+  --peer-cert-file=/etc/etcd/ssl/etcd.pem \
+  --peer-key-file=/etc/etcd/ssl/etcd-key.pem \
+  --trusted-ca-file=/etc/etcd/ssl/ca.pem \
+  --peer-trusted-ca-file=/etc/etcd/ssl/ca.pem \
+  --initial-advertise-peer-urls https://192.168.150.181:2380 \
+  --listen-peer-urls https://192.168.150.181:2380 \
+  --listen-client-urls https://192.168.150.181:2379,http://127.0.0.1:2379 \
+  --advertise-client-urls https://192.168.150.181:2379 \
+  --initial-cluster-token etcd-cluster-0 \
+  --initial-cluster node01=https://192.168.150.181:2380,node02=https://192.168.150.182:2380,node03=https://192.168.150.183:2380 \
+  --initial-cluster-state new \
+  --data-dir=/var/lib/etcd
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
 
+[Install]
+WantedBy=multi-user.target
+EOF
 
+#2) 配置node02的etcd.service
+cat <<EOF >/etc/systemd/system/etcd.service
+[Unit]
+Description=Etcd Server
+After=network.target
+After=network-online.target
+Wants=network-online.target
+Documentation=https://github.com/coreos
 
+[Service]
+Type=notify
+WorkingDirectory=/var/lib/etcd/
+ExecStart=/usr/bin/etcd \
+  --name node02 \
+  --cert-file=/etc/etcd/ssl/etcd.pem \
+  --key-file=/etc/etcd/ssl/etcd-key.pem \
+  --peer-cert-file=/etc/etcd/ssl/etcd.pem \
+  --peer-key-file=/etc/etcd/ssl/etcd-key.pem \
+  --trusted-ca-file=/etc/etcd/ssl/ca.pem \
+  --peer-trusted-ca-file=/etc/etcd/ssl/ca.pem \
+  --initial-advertise-peer-urls https://192.168.150.182:2380 \
+  --listen-peer-urls https://192.168.150.182:2380 \
+  --listen-client-urls https://192.168.150.182:2379,http://127.0.0.1:2379 \
+  --advertise-client-urls https://192.168.150.182:2379 \
+  --initial-cluster-token etcd-cluster-0 \
+  --initial-cluster node01=https://192.168.150.181:2380,node02=https://192.168.150.182:2380,node03=https://192.168.150.183:2380 \
+  --initial-cluster-state new \
+  --data-dir=/var/lib/etcd
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
 
+[Install]
+WantedBy=multi-user.target
+EOF
 
+#3) 配置node03的etcd.service
+cat <<EOF >/etc/systemd/system/etcd.service
+[Unit]
+Description=Etcd Server
+After=network.target
+After=network-online.target
+Wants=network-online.target
+Documentation=https://github.com/coreos
 
+[Service]
+Type=notify
+WorkingDirectory=/var/lib/etcd/
+ExecStart=/usr/bin/etcd \
+  --name node03 \
+  --cert-file=/etc/etcd/ssl/etcd.pem \
+  --key-file=/etc/etcd/ssl/etcd-key.pem \
+  --peer-cert-file=/etc/etcd/ssl/etcd.pem \
+  --peer-key-file=/etc/etcd/ssl/etcd-key.pem \
+  --trusted-ca-file=/etc/etcd/ssl/ca.pem \
+  --peer-trusted-ca-file=/etc/etcd/ssl/ca.pem \
+  --initial-advertise-peer-urls https://192.168.150.183:2380 \
+  --listen-peer-urls https://192.168.150.183:2380 \
+  --listen-client-urls https://192.168.150.183:2379,http://127.0.0.1:2379 \
+  --advertise-client-urls https://192.168.150.183:2379 \
+  --initial-cluster-token etcd-cluster-0 \
+--initial-cluster node01=https://192.168.150.181:2380,node02=https://192.168.150.182:2380,node03=https://192.168.150.183:2380 \
+  --initial-cluster-state new \
+  --data-dir=/var/lib/etcd
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
 
+[Install]
+WantedBy=multi-user.target
+EOF
 
+#2.添加自启动（etc集群最少2个节点才能启动，启动报错看mesages日志）
+mv etcd.service /usr/lib/systemd/system/
+ systemctl daemon-reload
+ systemctl enable etcd
+ systemctl start etcd
+ systemctl status etcd
+
+#3.在三个etcd节点执行一下命令检查cluster healthy状态
+etcdctl --endpoints=https://192.168.150.181:2379,https://192.168.150.182:2379,https://192.168.150.183:2379 \
+  --ca-file=/etc/etcd/ssl/ca.pem \
+  --cert-file=/etc/etcd/ssl/etcd.pem \
+  --key-file=/etc/etcd/ssl/etcd-key.pem  cluster-health
+
+#五、所有节点安装配置docker
 
 
 
