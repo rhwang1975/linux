@@ -472,6 +472,111 @@ yum install -y kubelet kubeadm kubectl
 systemctl enable kubelet 
 
 #2. 所有节点修改kubelet配置文件
+sed -i '8s/Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=systemd"/Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=cgroupfs"/g' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+echo "Environment=\"KUBELET_EXTRA_ARGS=--v=2 --fail-swap-on=false --pod-infra-container-image=registry.cn-hangzhou.aliyuncs.com/k8sth/pause-amd64:3.0\"" >> /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+#3. 所有节点修改完配置文件一定要重新加载配置
+systemctl daemon-reload
+systemctl enable kubelet
+
+#4. 命令补全
+yum install -y bash-completion
+source /usr/share/bash-completion/bash_completion
+source <(kubectl completion bash)
+echo "source <(kubectl completion bash)" >> ~/.bashrc
+
+#七、初始化集群
+#1.node01、node02、node03添加集群初始配置文件（集群配置文件一样）
+cat <<EOF > config.yaml 
+apiVersion: kubeadm.k8s.io/v1alpha1
+kind: MasterConfiguration
+etcd:
+  endpoints:
+  - https://192.168.150.181:2379
+  - https://192.168.150.182:2379
+  - https://192.168.150.183:2379
+  caFile: /etc/etcd/ssl/ca.pem
+  certFile: /etc/etcd/ssl/etcd.pem
+  keyFile: /etc/etcd/ssl/etcd-key.pem
+  dataDir: /var/lib/etcd
+networking:
+  podSubnet: 10.244.0.0/16
+kubernetesVersion: 1.10.0
+api:
+  advertiseAddress: "192.168.150.186"
+token: "b99a00.a144ef80536d4344"
+tokenTTL: "0s"
+apiServerCertSANs:
+- node01
+- node02
+- node03
+- 192.168.150.181
+- 192.168.150.182
+- 192.168.150.183
+- 192.168.150.184
+- 192.168.150.186
+featureGates:
+  CoreDNS: true
+imageRepository: "registry.cn-hangzhou.aliyuncs.com/k8sth"
+EOF
+
+#2. 首先node01初始化集群
+#配置文件定义podnetwork是10.244.0.0/16。kubeadmin init –hlep可以看出，service默认网段是10.96.0.0/12。/etc/systemd/system/kubelet.service.d/10-kubeadm.conf默认dns地址cluster-dns=10.96.0.10
+#执行初始化
+kubeadm init --config config.yaml
+
+#初始化失败后处理办法：
+kubeadm reset
+#或
+rm -rf /etc/kubernetes/*.conf
+rm -rf /etc/kubernetes/manifests/*.yaml
+docker ps -a |awk '{print $1}' |xargs docker rm -f
+systemctl  stop kubelet
+
+#初始化正常的结果如下：
+Your Kubernetes master has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+You can now join any number of machines by running the following on each node
+as root:
+
+  kubeadm join 192.168.150.186:6443 --token b99a00.a144ef80536d4344 --discovery-token-ca-cert-hash sha256:a1267ce0c24cb88c5f6b4cc6e7e8039094df3430fa64ebdac106ca911dcd0cb7
+
+
+#3. node01上面执行如下命令
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+[root@node01 ~]# kubectl version
+Client Version: version.Info{Major:"1", Minor:"10", GitVersion:"v1.10.4", GitCommit:"5ca598b4ba5abb89bb773071ce452e33fb66339d", GitTreeState:"clean", BuildDate:"2018-06-06T08:13:03Z", GoVersion:"go1.9.3", Compiler:"gc", Platform:"linux/amd64"}
+Server Version: version.Info{Major:"1", Minor:"10", GitVersion:"v1.10.0", GitCommit:"fc32d2f3698e36b93322a3465f63a14e9f0eaead", GitTreeState:"clean", BuildDate:"2018-03-26T16:44:10Z", GoVersion:"go1.9.3", Compiler:"gc", Platform:"linux/amd64"}
+
+
+#4. kubeadm生成证书密码文件分发到node02和node03上面去
+scp -r /etc/kubernetes/pki  node03:/etc/kubernetes/
+scp -r /etc/kubernetes/pki  node02:/etc/kubernetes/
+
+#5. 部署flannel网络，只需要在node01执行就行
+wget https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+#版本信息：quay.io/coreos/flannel:v0.10.0-amd64
+kubectl create -f  kube-flannel.yml
+执行命令
+[root@node01 ~]# kubectl get node
+NAME      STATUS     ROLES     AGE       VERSION
+node01    NotReady   master    19m       v1.10.4
+
+
+
+
 
 
 
