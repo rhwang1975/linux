@@ -73,6 +73,8 @@ systemctl enable ntpdate.service
 echo '*/30 * * * * /usr/sbin/ntpdate time7.aliyun.com >/dev/null 2>&1' > /tmp/crontab2.tmp
 crontab /tmp/crontab2.tmp
 systemctl start ntpdate.service
+#设置时区
+timedatectl set-timezone Asia/Shanghai
  
 echo "* soft nofile 65536" >> /etc/security/limits.conf
 echo "* hard nofile 65536" >> /etc/security/limits.conf
@@ -217,7 +219,11 @@ EOF
 
 #5.启动keepalived（3台）
 systemctl restart keepalived
+systemctl status keepalived
+
 可以看到VIP已经绑定到node01上面了
+ip a
+###########################################################################################################
 eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
     link/ether 00:0c:29:05:1a:21 brd ff:ff:ff:ff:ff:ff
     inet 192.168.150.181/24 brd 192.168.150.255 scope global noprefixroute eth0
@@ -226,8 +232,7 @@ eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group
        valid_lft forever preferred_lft forever
     inet6 fe80::20c:29ff:fe05:1a21/64 scope link noprefixroute 
        valid_lft forever preferred_lft forever
-
-
+###########################################################################################################
 
 #三、创建etcd证书(node01上执行即可)
 #1.设置cfssl环境
