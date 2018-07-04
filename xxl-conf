@@ -1,0 +1,180 @@
+Xxf-conf安装
+
+基础配置
+cd /etc/yum.repos.d/
+mkdir bk
+mv *.repo bk/
+curl -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+yum -y install wget
+wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
+yum -y update
+
+yum -y install yum-utils bash-completion vim lrzsz net-tools telnet nc psmisc tree lsof mlocate make cmake
+yum -y install gcc gcc-c++ gcc-c++-devel autoconf* automake* zlib* libxml* libgcrypt* libtool* openssl openssl-devel perl-Data-Dumper
+updatedb
+
+hostnamectl set-hostname dubbo-admin
+exit
+
+systemctl status firewalld
+systemctl stop firewalld
+systemctl disable firewalld
+systemctl status firewalld
+
+sed -ri '/^SELINUX=/c\SELINUX=disabled' /etc/selinux/config 
+cat /etc/selinux/config 
+
+rpm -qa |grep kernel
+yum -y remove kernel-3.10.0-327.el7.x86_64
+yum -y remove kernel-devel-3.10.0-327.el7.x86_64
+
+cat /etc/ssh/sshd_config 
+sed -i 's/^#UseDNS yes/UseDNS no/g' /etc/ssh/sshd_config
+sed -i 's/^GSSAPIAuthentication yes/GSSAPIAuthentication no/g' /etc/ssh/sshd_config
+cat /etc/ssh/sshd_config 
+
+安装jdk
+tar zxvf jdk-8u161-linux-x64.tar.gz -C /usr/local/
+cd /usr/local/
+mv jdk1.8.0_161 java
+安装maven
+tar zxvf apache-maven-3.5.3-bin.tar.gz -C /usr/local/
+cd /usr/local/
+mv apache-maven-3.5.3 maven
+安装tomcat
+tar zxvf apache-tomcat-8.5.30.tar.gz -C /usr/local/
+cd /usr/local/
+mv apache-tomcat-8.5.30 tomcat
+安装xxl-conf
+tar zxvf xxl-conf-1.4.0.tar.gz -C /usr/local/
+cd /usr/local/
+mv xxl-conf-1.4.0 xxl-conf
+修改环境变量
+vim /etc/profile
+=========================================
+JAVA_HOME=/usr/local/java
+PATH=$JAVA_HOME/bin:$PATH
+export JAVA_HOME PATH
+
+export M3_HOME=/usr/local/maven
+export PATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$M3_HOME/bin:$PATH
+
+CATALINA_HOME=/usr/local/tomcat
+export CATALINA_HOME 
+=========================================
+source /etc/profile
+java -version
+mvn -v
+
+
+https://repo.mysql.com//mysql80-community-release-el7-1.noarch.rpm
+
+yum安装mysql80 
+[root@xxl-conf xxlconf]# rpm -qa |grep mariadb
+mariadb-5.5.56-2.el7.x86_64
+mariadb-libs-5.5.56-2.el7.x86_64
+[root@xxl-conf xxlconf]# yum -y remove mariadb-5.5.56-2.el7.x86_64
+[root@xxl-conf xxlconf]# yum -y remove mariadb-libs-5.5.56-2.el7.x86_64
+[root@xxl-conf xxlconf]# rpm -qa |grep mariadb
+[root@xxl-conf xxlconf]# rpm -qa | grep mysql*
+[root@xxl-conf xxlconf]# yum list installed mysql*
+[root@xxl-conf xxlconf]# yum list mysql*
+
+
+[root@xxl-conf soft]# cd /etc/yum.repos.d/
+[root@xxl-conf yum.repos.d]# rz
+
+mysql80-community-release-el7-1.noarch.rpm
+
+[root@xxl-conf yum.repos.d]# rpm -Uvh mysql80-community-release-el7-1.noarch.rpm 
+
+[root@xxl-conf yum.repos.d]# rm mysql80-community-release-el7-1.noarch.rpm 
+
+[root@xxl-conf yum.repos.d]# ll
+total 20
+drwxr-xr-x. 2 root root 4096 May 20 17:38 bk
+-rw-r--r--  1 root root 2573 Nov 21  2014 CentOS-Base.repo
+-rw-r--r--  1 root root  664 May 11 11:35 epel.repo
+-rw-r--r--  1 root root 1864 Feb 22 16:49 mysql-community.repo
+-rw-r--r--  1 root root 1885 Feb 22 16:49 mysql-community-source.repo
+
+
+[root@xxl-conf yum.repos.d]# yum -y install mysql-server mysql-client
+
+[root@xxl-conf yum.repos.d]# whereis mysql
+[root@xxl-conf yum.repos.d]# cd /usr/lib64/mysql/
+
+[root@xxl-conf mysql]# service mysqld start
+[root@xxl-conf mysql]# ps -ef |grep mysqld
+mysql     14694      1  5 18:16 ?        00:00:00 /usr/sbin/mysqld
+root      14737   1358  0 18:17 pts/0    00:00:00 grep --color=auto mysqld
+[root@xxl-conf mysql]# ss -nltp|grep :3306
+ [root@xxl-conf mysql]# service mysqld status
+[root@xxl-conf mysql]# grep 'temporary password' /var/log/mysqld.log
+2018-05-20T10:16:56.092233Z 5 [Note] [MY-010454] [Server] A temporary password is generated for root@localhost: -4YhEluufeIR
+[root@xxl-conf mysql]# mysql -uroot -p
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 8
+Server version: 8.0.11
+
+Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'P@ssw0rd';
+Query OK, 0 rows affected (0.13 sec)
+
+mysql> \q
+Bye
+[root@xxl-conf mysql]# mysql -uroot -p
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 9
+Server version: 8.0.11 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> \q
+Bye
+
+
+[root@xxl-conf conf]# vim server.xml
+注释以下内容：
+    <!--
+    <Connector port="8080" protocol="HTTP/1.1"
+               connectionTimeout="20000"
+               redirectPort="8443" />
+    -->
+添加以下内容：
+ <Connector port="8080"
+               protocol="org.apache.coyote.http11.Http11NioProtocol" 
+               connectionTimeout="20000"
+               maxThreads="1000"
+               minSpareThreads="25"
+               maxSpareThreads="200"
+               emptySessionPath="false"
+               acceptCount="200"
+               disableUploadTimeout="true"
+               enableLookups="false"
+               redirectPort="8443" />
+
+mysql> source /usr/local/xxl-conf/doc/db/xxl-conf.sql
+
+
+
+
+
+
+
+
