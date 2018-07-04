@@ -1,0 +1,297 @@
+Dubbo-admin安装
+基础配置
+cd /etc/yum.repos.d/
+mkdir bk
+mv *.repo bk/
+curl -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+yum -y install wget
+wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
+yum -y update
+
+yum -y install yum-utils bash-completion vim lrzsz net-tools telnet nc psmisc tree lsof mlocate make cmake
+yum -y install gcc gcc-c++ gcc-c++-devel autoconf* automake* zlib* libxml* libgcrypt* libtool* openssl openssl-devel perl-Data-Dumper
+updatedb
+
+hostnamectl set-hostname dubbo-admin
+exit
+
+systemctl status firewalld
+systemctl stop firewalld
+systemctl disable firewalld
+systemctl status firewalld
+
+sed -ri '/^SELINUX=/c\SELINUX=disabled' /etc/selinux/config 
+cat /etc/selinux/config 
+
+rpm -qa |grep kernel
+yum -y remove kernel-3.10.0-327.el7.x86_64
+yum -y remove kernel-devel-3.10.0-327.el7.x86_64
+
+cat /etc/ssh/sshd_config 
+sed -i 's/^#UseDNS yes/UseDNS no/g' /etc/ssh/sshd_config
+sed -i 's/^GSSAPIAuthentication yes/GSSAPIAuthentication no/g' /etc/ssh/sshd_config
+cat /etc/ssh/sshd_config 
+
+zookeeper-3.4.12安装配置
+mkdir /soft
+cd /soft/
+rz
+mkdir /usr/local/zkcluster
+tar -zxvf zookeeper-3.4.12.tar.gz -C /usr/local/zkcluster
+tar -zxvf jdk-8u161-linux-x64.tar.gz -C /usr/local/
+cd /usr/local/
+
+mv jdk1.8.0_161 java
+cd zkcluster/
+mv zookeeper-3.4.12 zookeeper-node1
+
+
+cd zookeeper-node1/
+mkdir data
+cd ../
+cp -R zookeeper-node1 zookeeper-node2
+cp -R zookeeper-node1 zookeeper-node3
+
+cd zookeeper-node1/conf/
+mv zoo_sample.cfg zoo.cfg
+vim zoo.cfg 
+
+pwd
+vim zoo.cfg 
+=========================================
+tickTime=2000
+initLimit=10
+syncLimit=5
+dataDir=/usr/local/zkcluster/zookeeper-node1/data
+clientPort=2181
+server.1=dubbo-admin:2887:3887
+server.2=dubbo-admin:2888:3888
+server.3=dubbo-admin:2889:3889
+=========================================
+
+cp zoo.cfg /usr/local/zkcluster/zookeeper-node2/conf/
+vim /usr/local/zkcluster/zookeeper-node2/conf/zoo.cfg 
+=========================================
+tickTime=2000
+initLimit=10
+syncLimit=5
+dataDir=/usr/local/zkcluster/zookeeper-node2/data
+clientPort=2182
+server.1=dubbo-admin:2887:3887
+server.2=dubbo-admin:2888:3888
+server.3=dubbo-admin:2889:3889
+=========================================
+
+cp zoo.cfg /usr/local/zkcluster/zookeeper-node3/conf/
+vim /usr/local/zkcluster/zookeeper-node3/conf/zoo.cfg 
+=========================================
+tickTime=2000
+initLimit=10
+syncLimit=5
+dataDir=/usr/local/zkcluster/zookeeper-node3/data
+clientPort=2183
+server.1=dubbo-admin:2887:3887
+server.2=dubbo-admin:2888:3888
+server.3=dubbo-admin:2889:3889
+=========================================
+配置文件简单说明
+	tickTime：这个时间是作为 Zookeeper 服务器之间或客户端与服务器之间维持心跳的时间间隔，也就是每个 tickTime 时间就会发送一个心跳。
+	dataDir：顾名思义就是 Zookeeper 保存数据的目录，默认情况下，Zookeeper 将写数据的日志文件也保存在这个目录里。
+	dataLogDir：顾名思义就是 Zookeeper 保存日志文件的目录
+	clientPort：这个端口就是客户端连接 Zookeeper 服务器的端口，Zookeeper 会监听这个端口，接受客户端的访问请求。
+
+
+echo 1 > /usr/local/zkcluster/zookeeper-node1/data/myid
+cat /usr/local/zkcluster/zookeeper-node1/data/myid
+echo 2 > /usr/local/zkcluster/zookeeper-node2/data/myid
+cat /usr/local/zkcluster/zookeeper-node2/data/myid
+echo 3 > /usr/local/zkcluster/zookeeper-node3/data/myid
+cat /usr/local/zkcluster/zookeeper-node3/data/myid
+
+vim /etc/profile
+=========================================
+JAVA_HOME=/usr/local/java
+PATH=$JAVA_HOME/bin:$PATH
+export JAVA_HOME PATH
+
+export ZOOPEEPER_HOME=/usr/local/zkcluster/zookeeper-node1
+export ZOOPEEPER_HOME=/usr/local/zkcluster/zookeeper-node2
+export ZOOPEEPER_HOME=/usr/local/zkcluster/zookeeper-node3
+export PATH=$PATH:$ZOOPEEPER_HOME/bin
+=========================================
+source /etc/profile
+
+java –version
+启动zk伪集群
+/usr/local/zkcluster/zookeeper-node1/bin/zkServer.sh start
+/usr/local/zkcluster/zookeeper-node2/bin/zkServer.sh start
+/usr/local/zkcluster/zookeeper-node3/bin/zkServer.sh start pwd
+启动后jps可以看到QuorumPeerMain的进程
+[root@dubbo-admin ~]# jps -l -v
+1394 org.apache.zookeeper.server.quorum.QuorumPeerMain -Dzookeeper.log.dir=. -Dzookeeper.root.logger=INFO,CONSOLE -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false
+1507 sun.tools.jps.Jps -Dapplication.home=/usr/local/java -Xms8m
+1464 org.apache.zookeeper.server.quorum.QuorumPeerMain -Dzookeeper.log.dir=. -Dzookeeper.root.logger=INFO,CONSOLE -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false
+1422 org.apache.zookeeper.server.quorum.QuorumPeerMain -Dzookeeper.log.dir=. -Dzookeeper.root.logger=INFO,CONSOLE -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false
+启动客户端连接一下
+/usr/local/zkcluster/zookeeper-node1/bin/zkCli.sh -server localhost:2181
+/usr/local/zkcluster/zookeeper-node2/bin/zkCli.sh -server localhost:2182
+/usr/local/zkcluster/zookeeper-node3/bin/zkCli.sh -server localhost:2183
+或
+echo stat|nc localhost 2181
+[root@dubbo-admin target]# echo stat|nc dubbo-admin 2181
+Zookeeper version: 3.4.12-e5259e437540f349646870ea94dc2658c4e44b3b, built on 03/27/2018 03:55 GMT
+Clients:
+ /192.168.150.141:32796[0](queued=0,recved=1,sent=0)
+
+Latency min/avg/max: 0/0/0
+Received: 4
+Sent: 3
+Connections: 1
+Outstanding: 0
+Zxid: 0x100000006
+Mode: follower
+Node count: 4
+
+[root@dubbo-admin target]# echo stat|nc dubbo-admin 2182
+Zookeeper version: 3.4.12-e5259e437540f349646870ea94dc2658c4e44b3b, built on 03/27/2018 03:55 GMT
+Clients:
+ /192.168.150.141:58324[0](queued=0,recved=1,sent=0)
+
+Latency min/avg/max: 0/0/0
+Received: 1
+Sent: 0
+Connections: 1
+Outstanding: 0
+Zxid: 0x300000000
+Mode: leader
+Node count: 4
+
+[root@dubbo-admin target]# echo stat|nc dubbo-admin 2183
+Zookeeper version: 3.4.12-e5259e437540f349646870ea94dc2658c4e44b3b, built on 03/27/2018 03:55 GMT
+Clients:
+ /192.168.150.141:39874[0](queued=0,recved=1,sent=0)
+
+Latency min/avg/max: 0/0/0
+Received: 1
+Sent: 0
+Connections: 1
+Outstanding: 0
+Zxid: 0x100000006
+Mode: follower
+Node count: 4
+
+
+
+
+telnet localhost 2181
+telnet localhost 2182
+telnet localhost 2183
+[root@dubbo-admin target]# echo dump | nc dubbo-admin 2181
+SessionTracker dump:
+org.apache.zookeeper.server.quorum.LearnerSessionTracker@45063d6e
+ephemeral nodes dump:
+Sessions with Ephemerals (0):
+
+安装maven
+cd /soft/
+rz
+tar zxvf apache-maven-3.5.3-bin.tar.gz -C /usr/local/
+cd /usr/local/
+mv apache-maven-3.5.3 maven
+vim /etc/profile
+添加以下内容：
+=========================================
+export M3_HOME=/usr/local/maven
+export PATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$M3_HOME/bin:$PATH
+=========================================
+source /etc/profile
+mvn -v
+
+
+
+
+
+
+tomcat-8.5.30安装
+rz
+tar zxvf apache-tomcat-8.5.30.tar.gz -C /usr/local/
+cd /usr/local/
+cd mv apache-tomcat-8.5.30 tomcat
+mv apache-tomcat-8.5.30 tomcat
+vim /etc/profile
+添加以下内容：
+=========================================
+CATALINA_HOME=/usr/local/tomcat
+export CATALINA_HOME
+=========================================
+source /etc/profile
+
+cd tomcat/
+cd webapps/
+
+补充：
+Tomcat中配置zk和kafka的配置文件
+配置文件目录：
+	配置文件1：/usr/local/tomcat/webapps/qmall/WEB-INF/classes/config.properties
+[root@dev-6 classes]# vi config.properties
+conf.zkServer=192.168.2.1:2181
+conf.groupName=ec_buried
+	配置文件1：/usr/local/tomcat/webapps/qmall/WEB-INF/classes/
+[root@dev-6 classes]# vi kafka.properties
+bootstrap.servers=192.168.2.5:9092
+# default true
+enable.auto.commit=true
+# default 500
+max.poll.records=500
+kafka.zookeeper.connect=192.168.2.1:2181
+key.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+
+dubbo-admin安装
+在github上找到dubbo管控台的程序下载到本地，使用rz上传到/usr/local目录中。
+https://github.com/alibaba/dubbo/tree/2.5.x
+解压并更改名称
+unzip incubator-dubbo-2.5.x.zip
+mv incubator-dubbo-2.5.x dubbo
+在dubbo-admin目录下运行 mvn clean package -Dmaven.test.skip
+cd dubbo/dubbo-admin/
+mvn clean package -Dmaven.test.skip
+打包完成后进入target目录，生成dubbo-admin-2.5.10.war包
+cd target/
+[root@dubbo-admin target]# ll
+total 31312
+drwxr-xr-x 4 root root       31 May 12 10:38 classes
+drwxr-xr-x 8 root root      124 May 12 10:38 dubbo-admin-2.5.10
+-rw-r--r-- 1 root root 		32062836 May 12 10:38 dubbo-admin-2.5.10.war
+drwxr-xr-x 3 root root       24 May 12 10:38 generated-sources
+drwxr-xr-x 2 root root       27 May 12 10:38 maven-archiver
+drwxr-xr-x 3 root root       34 May 12 10:38 maven-status
+
+把dubbo-admin-2.5.10.war包上传到webapps目录下
+cp dubbo-admin-2.5.10.war /usr/local/tomcat/webapps/
+解压war包并命名为ROOT:
+unzip dubbo-admin-2.5.10.war -d dubbo-admin
+rm dubbo-admin-2.5.10.war
+配置dubbo.properties:
+vim ./dubbo-admin/WEB-INF/dubbo.properties
+=============================================
+dubbo.registry.address=zookeeper://127.0.0.1:2181
+dubbo.admin.root.password=root
+dubbo.admin.guest.password=guest
+=============================================
+防火墙开启8080端口，用root 用户修改/etc/sysconfig/iptables
+vim /etc/sysconfig/iptables
+添加以下内容：
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 8080 j ACCEPT
+重启防火墙
+service iptables restart
+启动Tomcat
+[root@dubbo-admin bin]# ./startup.sh 
+Using CATALINA_BASE:   /usr/local/tomcat
+Using CATALINA_HOME:   /usr/local/tomcat
+Using CATALINA_TMPDIR: /usr/local/tomcat/temp
+Using JRE_HOME:        /usr/local/java
+Using CLASSPATH:       /usr/local/tomcat/bin/bootstrap.jar:/usr/local/tomcat/bin/tomcat-juli.jar
+Tomcat started.
+[root@dubbo-admin bin]# ./startup.sh；tail -f ../logs/catalina.out 
+[root@dubbo-admin bin]# ps -ef |grep tomcat
